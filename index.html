@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happy Birthday!</title>
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    background: linear-gradient(to bottom, #ffe0f0, #ffffff);
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  h1 {
+    font-size: 3.5em;
+    text-align: center;
+    margin: 20px 0;
+    animation: bounceColor 1.5s infinite;
+  }
+
+  @keyframes bounceColor {
+    0% { color: #ff66b2; }
+    50% { color: #ffb3d9; }
+    100% { color: #ff66b2; }
+  }
+
+  img#slideshow {
+    width: 300px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    border: 4px solid #ff99cc;
+  }
+
+  canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+  }
+
+  #playButton {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #ff66b2;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 1em;
+    border-radius: 25px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    z-index: 10;
+    transition: transform 0.2s;
+  }
+
+  #playButton:hover {
+    transform: scale(1.1);
+  }
+
+  #messages {
+    position: absolute;
+    top: 10%;
+    text-align: center;
+    width: 100%;
+    font-size: 2em;
+    color: #ff66b2;
+  }
+
+  #giftBox {
+    width: 100px;
+    position: absolute;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: pointer;
+    z-index: 10;
+  }
+
+  #surprise {
+    position: absolute;
+    bottom: 170px;
+    width: 100%;
+    text-align: center;
+    font-size: 2em;
+    color: #ff66b2;
+    display: none;
+  }
+</style>
+</head>
+<body>
+<h1>Happy Birthday, Ain Fatihah! 🎀</h1>
+
+<!-- Slideshow -->
+<img id="slideshow" src="birthday.png" alt="Birthday Slideshow">
+
+<!-- Messages -->
+<div id="messages"></div>
+
+<!-- Music -->
+<audio id="birthdayMusic" loop>
+  <source src="https://www.bensound.com/bensound-music/bensound-buddy.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Play Music Button -->
+<button id="playButton">🎵 Play Music</button>
+
+<!-- Gift Box -->
+<img id="giftBox" src="gift-box.png" alt="Gift Box">
+
+<!-- Surprise Message -->
+<div id="surprise">🎁 Surprise! Tua Doh Die! 🎉</div>
+
+<!-- Canvas for confetti, balloons, fireworks -->
+<canvas id="celebration"></canvas>
+
+<script>
+const canvas = document.getElementById('celebration');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+const ctx = canvas.getContext('2d');
+
+// ---------- Confetti ----------
+const confettiCount = 100;
+const confetti = [];
+for(let i=0;i<confettiCount;i++){
+  const pinkShades = ['#ff66b2','#ff99cc','#ffb3d9','#ff80bf','#ffcce6'];
+  confetti.push({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height - canvas.height,
+    r: Math.random()*6 + 4,
+    d: Math.random()*confettiCount,
+    color: pinkShades[Math.floor(Math.random()*pinkShades.length)],
+    tilt: Math.random()*10 - 10
+  });
+}
+
+// ---------- Balloons ----------
+const balloons = [];
+const balloonCount = 20;
+const balloonColors = ['#ff66b2','#ff99cc','#ffb3d9','#ff80bf','#ffcce6'];
+for(let i=0;i<balloonCount;i++){
+  balloons.push({
+    x: Math.random()*canvas.width,
+    y: canvas.height + Math.random()*500,
+    r: 20 + Math.random()*20,
+    color: balloonColors[Math.floor(Math.random()*balloonColors.length)],
+    speed: 1 + Math.random()*2,
+    popped: false
+  });
+}
+
+// ---------- Fireworks ----------
+const fireworks = [];
+function createFirework(){
+  fireworks.push({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height/2,
+    particles: Array.from({length: 30}, () => ({
+      x: 0, y: 0, vx: (Math.random()-0.5)*4, vy: (Math.random()-0.5)*4,
+      color: balloonColors[Math.floor(Math.random()*balloonColors.length)]
+    })),
+    age: 0
+  });
+}
+
+// ---------- Hearts ----------
+const hearts = [];
+function drawHearts(){
+  hearts.forEach((h, i) => {
+    ctx.save();
+    ctx.globalAlpha = h.alpha;
+    ctx.fillStyle = h.color;
+    ctx.beginPath();
+    ctx.moveTo(h.x, h.y);
+    ctx.bezierCurveTo(h.x, h.y - h.size/2, h.x - h.size/2, h.y - h.size, h.x, h.y - h.size);
+    ctx.bezierCurveTo(h.x + h.size/2, h.y - h.size, h.x, h.y - h.size/2, h.x, h.y);
+    ctx.fill();
+    ctx.restore();
+
+    // Floating up with sway
+    h.y -= h.speed;
+    h.x += Math.sin(h.swayAngle) * h.sway;
+    h.swayAngle += 0.05;
+
+    // Bounce at the top
+    if(h.y < 50) h.y += Math.sin(h.y * 0.1) * 2;
+
+    h.alpha -= 0.01;
+    if(h.alpha <= 0) hearts.splice(i, 1);
+  });
+}
+
+
+// ---------- Draw Loop ----------
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // Confetti
+  confetti.forEach(c=>{
+    ctx.beginPath();
+    ctx.lineWidth = c.r/2;
+    ctx.strokeStyle = c.color;
+    ctx.moveTo(c.x + c.tilt, c.y);
+    ctx.lineTo(c.x + c.tilt + c.r/2, c.y + c.r);
+    ctx.stroke();
+    c.y += Math.cos(c.d) + 1 + c.r/2;
+    c.tilt += Math.sin(c.d);
+    if(c.y > canvas.height){ c.y = -10; c.x = Math.random()*canvas.width; }
+  });
+
+  // Balloons
+  balloons.forEach(b=>{
+    if(!b.popped){
+      ctx.beginPath();
+      ctx.fillStyle = b.color;
+      ctx.ellipse(b.x, b.y, b.r*0.6, b.r, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(b.x, b.y + b.r);
+      ctx.lineTo(b.x, b.y + b.r + 30);
+      ctx.strokeStyle = b.color;
+      ctx.stroke();
+      b.y -= b.speed;
+      if(b.y + b.r < 0) b.y = canvas.height + 50;
+    }
+  });
+
+  // Fireworks
+  if(Math.random()<0.02) createFirework();
+  fireworks.forEach(f=>{
+    f.age++;
+    f.particles.forEach(p=>{
+      p.x += p.vx; p.y += p.vy;
+      ctx.beginPath();
+      ctx.fillStyle = p.color;
+      ctx.arc(f.x + p.x, f.y + p.y, 2, 0, Math.PI*2);
+      ctx.fill();
+      p.vy += 0.05;
+    });
+  });
+  fireworks.forEach((f,i)=>{if(f.age>80) fireworks.splice(i,1);});
+
+  // Draw hearts
+  drawHearts();
+}
+
+setInterval(draw, 20);
+
+// ---------- Slideshow ----------
+const pics = ["birthday.png","birthday2.jpeg","birthday3.jpeg"];
+let index = 0;
+setInterval(()=>{
+  index = (index+1) % pics.length;
+  document.getElementById('slideshow').src = pics[index];
+}, 3000);
+
+// ---------- Random Messages ----------
+const wishes = [
+  "You’re beautiful! 💖",
+  "Wishing you joy and laughter! 🎉",
+  "Have a magical day! ✨",
+  "Cake, fun, and smiles! 🍰😄",
+  "Keep shining bright! 🌟",
+  "Hope your day is full of joy! 🎈"
+];
+
+setInterval(() => {
+  const msg = document.getElementById('messages');
+  msg.innerText = wishes[Math.floor(Math.random()*wishes.length)];
+}, 4000);
+
+// ---------- Music Button ----------
+const playButton = document.getElementById('playButton');
+playButton.addEventListener('click', () => {
+  const audio = document.getElementById('birthdayMusic');
+  if(audio.paused) {
+    audio.play();
+    playButton.style.display = 'none';
+  }
+});
+
+// ---------- Clickable Balloons ----------
+canvas.addEventListener('click', (e)=>{
+  balloons.forEach(b=>{
+    if(!b.popped){
+      const dx = e.clientX - b.x;
+      const dy = e.clientY - b.y;
+      if(Math.sqrt(dx*dx + dy*dy) < b.r){
+        b.popped = true;
+      }
+    }
+  });
+});
+
+// ---------- Gift Box ----------
+const giftBox = document.getElementById('giftBox');
+const surprise = document.getElementById('surprise');
+
+giftBox.addEventListener('click', () => {
+  surprise.style.display = 'block';
+  giftBox.style.transform = 'translateX(-50%) scale(0)';
+  setTimeout(() => { giftBox.style.display = 'none'; }, 500);
+
+  // Fireworks
+  for(let i=0;i<5;i++) createFirework();
+
+  // Confetti burst
+  for(let i=0;i<100;i++){
+    confetti.push({
+      x: canvas.width/2,
+      y: canvas.height - 100,
+      r: Math.random()*6 + 4,
+      d: Math.random()*100,
+      color: ['#ff66b2','#ff99cc','#ffb3d9','#ff80bf','#ffcce6'][Math.floor(Math.random()*5)],
+      tilt: Math.random()*10 - 10
+    });
+  }
+
+  // Hearts floating up
+  for(let i=0;i<20;i++){
+  hearts.push({
+    x: canvas.width/2 + (Math.random()*100 - 50),
+    y: canvas.height - 100,
+    size: 10 + Math.random()*10,
+    speed: 1 + Math.random()*2,
+    color: '#ff4d94',
+    alpha: 1,
+    sway: Math.random() * 3 + 1,        // sway range
+    swayAngle: Math.random() * Math.PI*2 // random starting angle
+  });
+  }
+});
+
+window.addEventListener('resize', () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+</script>
+</body>
+</html>
